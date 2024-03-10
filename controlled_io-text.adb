@@ -12,6 +12,8 @@ package body Controlled_IO.Text is
       All_Lines : for I in 1 .. Spacing loop
          Byte_IO.Write (File => File.Handle, Item => Character'Pos (Ada.Characters.Latin_1.LF) );
       end loop All_Lines;
+
+      File.Empty := True; -- Lose any buffered Byte
    end New_Line;
 
    function Get_C (File : in out File_Handle) return Character;
@@ -153,6 +155,7 @@ package body Controlled_IO.Text is
       else
          Result := File.Buffer;
          File.Empty := True;
+         File.Set_Position (Position => File.Position + 1);
       end if;
 
       return Character'Val (Result);
@@ -163,5 +166,6 @@ package body Controlled_IO.Text is
    begin -- Put_Back_C
       File.Buffer := Character'Pos (Item);
       File.Empty := False;
+      File.Set_Position (Position => File.Position - 1);
    end Put_Back_C;
 end Controlled_IO.Text;

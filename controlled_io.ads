@@ -23,13 +23,13 @@ package Controlled_IO is
 
    function Created (Name : in String; Form : in String := "") return File_Handle with
       Post => Created'Result.Position = 1;
-   -- Creates a new file named Name (deleting any existing file named Name) with File.Position = 1
+   -- Creates a new file named Name (deleting any existing file named Name)
 
    function Opened_Or_Created (Name : in String; Form : in String := "") return File_Handle is
       (if Ada.Directories.Exists (Name) then Opened (Name, Form) else Created (Name, Form) );
 
    function End_Of_File (File : in File_Handle) return Boolean;
-   -- Returns True if the current position of File.Position > File.Size; False otherwise
+   -- Returns File.Position > File.Size
 
    subtype Byte is Interfaces.Unsigned_8;
    type Byte_List is array (Positive range <>) of Byte;
@@ -38,7 +38,7 @@ package Controlled_IO is
    subtype Position_Value is Count_Value range 1 .. Count_Value'Last;
 
    function Size (File : in File_Handle) return Count_Value;
-   -- Returns the current size of File
+   -- Returns the current number of bytes in File
 
    procedure Set_Position (File : in out File_Handle; Position : in Position_Value) with
       Pre => Position in 1 .. File.Size + 1;
