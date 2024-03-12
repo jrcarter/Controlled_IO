@@ -12,35 +12,31 @@ package body Controlled_IO.Text is
       All_Lines : for I in 1 .. Spacing loop
          Byte_IO.Write (File => File.Handle, Item => Character'Pos (Ada.Characters.Latin_1.LF) );
       end loop All_Lines;
-
-      File.Empty := True; -- Lose any buffered Byte
    end New_Line;
 
-   function Get_C (File : in out File_Handle) return Character;
+   function Next_Raw (File : in out File_Handle) return Character;
    -- Gets the next Character from File, including EOL Characters
 
-   procedure Put_Back_C (File : in out File_Handle; Item : in Character) with
-      Pre => File.Empty or else raise Program_Error with "Put_Back_C: Buffer not empty";
-   -- Makes Item the Character that Get_C will return next
+   procedure Undo_Read (File : in out File_Handle);
+   -- Makes the last Character read by Next_Raw be the Character that Next_Raw will return next by decrementing File's position
 
    procedure Skip_Line (File : in out File_Handle; Spacing : in Positive := 1) is
-      Char1 : Character;
-      Char2 : Character;
-      EOF   : Boolean := True; -- Indicates if End_Error should be reraised
+      Char : Character;
+      EOF  : Boolean; -- Indicates if End_Error should be reraised
    begin -- Skip_Line
       All_Lines : for I in 1 .. Spacing loop
          EOF := I < Spacing;
 
          Find_EOL : loop
-            Char1 := Get_C (File);
+            Char := Next_Raw (File);
 
-            exit Find_EOL when Char1 = Ada.Characters.Latin_1.LF;
+            exit Find_EOL when Char = Ada.Characters.Latin_1.LF;
 
-            if Char1 = Ada.Characters.Latin_1.CR then
-               Char2 := Get_C (File);
+            if Char = Ada.Characters.Latin_1.CR then
+               Char := Next_Raw (File);
 
-               if Char2 /= Ada.Characters.Latin_1.LF then
-                  Put_Back_C (File => File, Item => Char2);
+               if Char /= Ada.Characters.Latin_1.LF then
+                  Undo_Read (File => File);
                end if;
 
                exit Find_EOL;
@@ -56,9 +52,9 @@ package body Controlled_IO.Text is
    end Skip_Line;
 
    function End_Of_Line (File : in out File_Handle) return Boolean is
-      Char : constant Character := Get_C (File);
+      Char : constant Character := Next_Raw (File);
    begin -- End_Of_Line
-      Put_Back_C (File => File, Item => Char);
+      Undo_Read (File => File);
 
       return Char in Ada.Characters.Latin_1.CR | Ada.Characters.Latin_1.LF;
    end End_Of_Line;
@@ -67,17 +63,17 @@ package body Controlled_IO.Text is
       Char : Character;
    begin -- Next
       Find_Item : loop
-         Char := Get_C (File);
+         Char := Next_Raw (File);
 
          if Char not in Ada.Characters.Latin_1.CR | Ada.Characters.Latin_1.LF then
             return Char;
          end if;
 
          if Char = Ada.Characters.Latin_1.CR then -- Mac or DOS/Windows EOL
-            Char := Get_C (File); -- Check for DOS/Windows EOL
+            Char := Next_Raw (File); -- Check for DOS/Windows EOL
 
             if Char /= Ada.Characters.Latin_1.LF then
-               Put_Back_C (File => File, Item => Char);
+               Undo_Read (File => File);
             end if;
          end if;
       end loop Find_Item;
@@ -130,7 +126,7 @@ package body Controlled_IO.Text is
             return;
          end if;
 
-         Item (I) := Get_C (File);
+         Item (I) := Next_Raw (File);
          Last := I;
       end loop Get_Characters;
    exception -- Read_Line
@@ -147,25 +143,17 @@ package body Controlled_IO.Text is
       New_Line (File => File);
    end Write_Line;
 
-   function Get_C (File : in out File_Handle) return Character is
+   function Next_Raw (File : in out File_Handle) return Character is
       Result : Byte;
-   begin -- Get_C
-      if File.Empty then
-         Byte_IO.Read (File => File.Handle, Item => Result);
-      else
-         Result := File.Buffer;
-         File.Empty := True;
-         File.Set_Position (Position => File.Position + 1);
-      end if;
+   begin -- Next_Raw
+      Byte_IO.Read (File => File.Handle, Item => Result);
 
       return Character'Val (Result);
-   end Get_C;
+   end Next_Raw;
 
-   procedure Put_Back_C (File : in out File_Handle; Item : in Character) is
+   procedure Undo_Read (File : in out File_Handle) is
       -- Empty
-   begin -- Put_Back_C
-      File.Buffer := Character'Pos (Item);
-      File.Empty := False;
+   begin -- Undo_Read
       File.Set_Position (Position => File.Position - 1);
-   end Put_Back_C;
+   end Undo_Read;
 end Controlled_IO.Text;

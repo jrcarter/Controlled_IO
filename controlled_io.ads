@@ -66,8 +66,6 @@ private -- Controlled_IO
 
    type File_Handle is new Ada.Finalization.Limited_Controlled with record
       Handle : Byte_IO.File_Type;
-      Buffer : Byte;            -- For text-file EOL handling
-      Empty  : Boolean := True; --            "
    end record;
 
    overriding procedure Finalize (Object : in out File_Handle);

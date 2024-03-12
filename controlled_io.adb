@@ -34,10 +34,6 @@ package body Controlled_IO is
    procedure Set_Position (File : in out File_Handle; Position : in Position_Value) is
       -- Empty
    begin -- Set_Position
-      if Position /= File.Position then -- If we're actually changing File's position, lose any Byte buffered by a Text operation
-         File.Empty := True;
-      end if;
-
       Byte_IO.Set_Index (File => File.Handle, To => Byte_IO.Count (Position) );
    end Set_Position;
 
@@ -61,7 +57,6 @@ package body Controlled_IO is
       -- Empty
    begin -- Write
       Byte_IO.Write (File => File.Handle, Item => Value);
-      File.Empty := True; -- Lose any Byte buffered by a Text operation
    end Write;
 
    procedure Write (File : in out File_Handle; Value : in Byte_List) is
