@@ -52,9 +52,8 @@ package Controlled_IO is
    -- Returns the byte in File at the current position and increments the current position
 
    procedure Read (File : in out File_Handle; List : out Byte_List) with
-      Pre => not File.End_Of_File;
+      Pre => not File.End_Of_File and then File.Size - File.Position + 1 >= List'Length;
    -- Calls File.Next for every Byte in List
-   -- Raises Ada.IO_Exceptions.End_Error if there are fewer than List'Length bytes left in File
 
    procedure Write (File : in out File_Handle; Value : in Byte);
    -- Writes Value to File at the current position and increments the current position
