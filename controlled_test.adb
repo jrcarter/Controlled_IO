@@ -1,6 +1,9 @@
 -- Test of Controlled_IO: binary file copy
 -- Copyright (C) by PragmAda Software Engineering
--- Released under the terms of the BSD 3-Clause license; see https://opensource.org/licenses
+-- SPDX-License-Identifier: BSD-3-Clause
+-- See https://spdx.org/licenses/
+-- If you find this software useful, please let me know, either through
+-- github.com/jrcarter or directly to pragmada@pragmada.x10hosting.com
 
 with Ada.Command_Line;
 with Controlled_IO;
